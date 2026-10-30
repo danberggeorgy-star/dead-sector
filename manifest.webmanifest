@@ -1,0 +1,9 @@
+{
+  "name": "Мёртвый Сектор / Dead Sector",
+  "short_name": "Dead Sector",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0b0807",
+  "theme_color": "#0b0807"
+}

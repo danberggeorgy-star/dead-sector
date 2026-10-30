@@ -2,7 +2,13 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0807">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dead Sector">
+<link rel="manifest" href="manifest.webmanifest">
 <title>Мёртвый Сектор</title>
 <link rel="stylesheet" href="fonts/fonts.css">
 <style>
@@ -14,8 +20,8 @@
   color-scheme:dark;
 }
 [hidden]{display:none!important}
-html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow:hidden;font-family:var(--px);-webkit-font-smoothing:none}
-#game{position:fixed;inset:0;overflow:hidden;background:var(--void);user-select:none;-webkit-user-select:none}
+html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow:hidden;font-family:var(--px);-webkit-font-smoothing:none;overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
+#game{position:fixed;inset:0;overflow:hidden;background:var(--void);user-select:none;-webkit-user-select:none;touch-action:none}
 #view{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:crisp-edges;image-rendering:pixelated;cursor:crosshair}
 #view.smooth{image-rendering:auto}
 #fx-dmg,#fx-pick,#fx-low{position:absolute;inset:0;pointer-events:none;opacity:0}
@@ -30,7 +36,12 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 #melt{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;z-index:30;pointer-events:none}
 #msgs{position:absolute;top:calc(56px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:2px;pointer-events:none;font-size:16px;text-shadow:2px 2px 0 #000;max-width:60vw}
 #msgs div{transition:opacity .5s}
-#minimap{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));width:150px;height:auto;opacity:.85;image-rendering:pixelated;border:2px solid #000;outline:1px solid var(--plate-hi);background:rgba(0,0,0,.45)}
+#mapbox{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));z-index:5;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+#minimap{display:block;width:clamp(72px,18vmin,150px);height:auto;opacity:.55;image-rendering:pixelated;border:2px solid rgba(0,0,0,.6);outline:1px solid rgba(84,68,58,.6);background:rgba(0,0,0,.2);cursor:pointer}
+#mapbox.closed #minimap{display:none}
+#map-tog{font-family:var(--px);font-size:12px;color:var(--bone);background:rgba(23,17,14,.6);border:2px solid #000;box-shadow:inset 0 0 0 1px var(--plate-hi);padding:3px 7px;cursor:pointer;opacity:.8;text-shadow:1px 1px 0 #000}
+#map-tog .k{color:var(--amber);margin-left:6px}
+#game.touch #map-tog .k{display:none}
 #bossbar{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(440px,52vw);text-align:center;pointer-events:none}
 #bossbar .name{font-size:24px;color:var(--amber);text-shadow:2px 2px 0 #000}
 #bossbar .track{height:12px;margin-top:4px;background:#1b0a07;border:2px solid #000}
@@ -57,13 +68,46 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 .mid{font-size:clamp(16px,2.4vw,32px);color:var(--bone);text-shadow:2px 2px 0 #000;white-space:nowrap}
 .small{font-size:clamp(10px,1.2vw,16px);color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums}
 .small b{color:var(--bone);font-weight:400}
-@media (max-width:620px){#hud{grid-template-columns:1fr 1fr auto 1fr 1fr}.cell.arms{display:none}#minimap{width:96px}}
+@media (max-width:620px){#hud{grid-template-columns:1fr 1fr auto 1fr 1fr}.cell.arms{display:none}}
+/* phones: a slimmer status bar that still reads at arm's length */
+@media (max-height:520px),(max-width:700px){
+  #hud{gap:2px;padding:2px max(6px,env(safe-area-inset-right,0px)) calc(2px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));border-top-width:2px}
+  .cell{padding:2px 4px;border-width:1px;box-shadow:inset 0 0 0 1px #2e241e}
+  .cell::before,.cell::after{display:none}
+  .big{font-size:clamp(16px,3.4vw,24px);text-shadow:2px 2px 0 #000}
+  .lbl{font-size:10px;margin-top:1px}
+  .face{padding:1px}
+  #face{width:clamp(26px,4vw,36px)}
+  .slots{font-size:16px;gap:5px}
+  .mid{font-size:14px}
+  .small{font-size:10px}
+  #msgs{font-size:12px;top:calc(40px + env(safe-area-inset-top,0px))}
+  .menu-btn{font-size:12px;padding:4px 8px}
+  #bossbar .name{font-size:16px}
+  #bossbar .track{height:8px}
+}
 
+#tl{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));left:max(8px,env(safe-area-inset-left,0px));display:flex;gap:6px;z-index:5}
+#tl .menu-btn{position:static}
 .menu-btn{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;background:var(--plate-lo);border:2px solid #000;box-shadow:inset 0 0 0 2px var(--plate-hi);color:var(--bone);font-family:var(--px);font-size:16px;padding:6px 10px;z-index:5;cursor:pointer}
 .menu-btn .k{color:var(--amber)}
 .menu-btn:hover{color:var(--red-hi)}
+#game.touch .menu-btn .k{display:none}
 
-#ui{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding-block:calc(24px + env(safe-area-inset-top,0px)) calc(52px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:radial-gradient(ellipse at center,rgba(8,5,4,.35),rgba(8,5,4,.86) 75%);overflow-y:auto;text-align:center;cursor:default}
+/* touch controls: floating stick on the left, drag-to-look on the right, plates for fire and weapon */
+#touch{position:absolute;inset:0;z-index:4;touch-action:none}
+#t-stick{position:absolute;left:calc(max(16px,env(safe-area-inset-left,0px)) + 70px);top:calc(100% - var(--hud-h,56px) - 86px);width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(232,216,184,.3);background:rgba(0,0,0,.15);pointer-events:none;opacity:.6}
+#t-stick.on{opacity:1}
+#t-knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(232,216,184,.3);border:2px solid rgba(0,0,0,.45)}
+.tbtn{position:absolute;font-family:var(--px);color:var(--bone);background:rgba(23,17,14,.5);border:2px solid rgba(0,0,0,.7);box-shadow:inset 0 0 0 2px rgba(84,68,58,.8);display:flex;flex-direction:column;align-items:center;justify-content:center;text-shadow:2px 2px 0 #000;touch-action:none;padding:0;user-select:none;-webkit-user-select:none}
+#t-fire{right:calc(max(14px,env(safe-area-inset-right,0px)) + 4px);bottom:calc(var(--hud-h,56px) + 16px);width:88px;height:88px;border-radius:50%;font-size:14px;color:var(--red-hi)}
+#t-fire.on{background:rgba(196,44,24,.55)}
+#t-weap{right:calc(max(14px,env(safe-area-inset-right,0px)) + 104px);bottom:calc(var(--hud-h,56px) + 22px);width:54px;height:54px;font-size:22px;color:var(--amber)}
+#t-weap small{font-size:9px;color:var(--dim)}
+#t-weap.on,#t-fs.on{background:rgba(84,68,58,.7)}
+.ui-back{position:absolute;z-index:2}
+
+#ui{touch-action:pan-y;position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding-block:calc(24px + env(safe-area-inset-top,0px)) calc(52px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:radial-gradient(ellipse at center,rgba(8,5,4,.35),rgba(8,5,4,.86) 75%);overflow-y:auto;text-align:center;cursor:default}
 #ui>*{flex-shrink:0}
 #logo{image-rendering:pixelated;display:block;max-width:100%}
 .press{font-size:clamp(24px,3.4vw,32px);color:var(--bone);text-shadow:3px 3px 0 #000;margin-top:20px}
@@ -94,6 +138,7 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 .w0{color:var(--amber)}.w1{color:#ff8a3a}.w2{color:var(--plasma)}.w-1{color:var(--toxic)}
 #menu-note{position:absolute;left:16px;right:16px;bottom:calc(48px + env(safe-area-inset-bottom,0px));text-align:center;font-size:16px;color:var(--amber);z-index:21;text-shadow:2px 2px 0 #000}
 @media (max-height:560px){#ui{gap:10px}.item{font-size:28px}.uihead{font-size:36px}}
+@media (max-height:440px),(max-width:480px){#ui{gap:6px;padding-bottom:calc(36px + env(safe-area-inset-bottom,0px))}.item{font-size:24px}.items.sm .item{font-size:18px}.uihead{font-size:30px}.utext,.usub{font-size:16px}.desc{font-size:13px;min-height:2.4em}.stats{font-size:16px}.ctl{font-size:13px;gap:3px 18px}.press{font-size:20px}.uhint,.ufoot{font-size:12px}.uhint{bottom:calc(8px + env(safe-area-inset-bottom,0px))}}
 @media (prefers-reduced-motion:reduce){.blink{animation:none}}
 </style>
 </head>
@@ -102,10 +147,18 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
   <canvas id="view"></canvas>
   <div id="fx-low"></div><div id="fx-dmg"></div><div id="fx-pick"></div>
   <div id="crosshair" hidden></div>
-  <button class="menu-btn" id="btn-menu" type="button" hidden><span data-i="menuBtn">МЕНЮ</span><span class="k">ESC</span></button>
+  <div id="touch" hidden>
+    <div id="t-stick"><div id="t-knob"></div></div>
+    <button class="tbtn" id="t-weap" type="button"><span id="t-wn">1</span><small>⇄</small></button>
+    <button class="tbtn" id="t-fire" type="button" data-i="tFire">ОГОНЬ</button>
+  </div>
+  <div id="tl">
+    <button class="menu-btn" id="btn-menu" type="button" hidden><span data-i="menuBtn">МЕНЮ</span><span class="k">ESC</span></button>
+    <button class="menu-btn" id="btn-fs" type="button" hidden aria-label="Fullscreen">⛶</button>
+  </div>
   <div id="msgs"></div>
   <div id="bossbar" hidden><div class="name" id="boss-name"></div><div class="track"><div class="fill" id="boss-fill"></div></div></div>
-  <canvas id="minimap" hidden></canvas>
+  <div id="mapbox" hidden><canvas id="minimap"></canvas><button id="map-tog" type="button"><span id="map-lbl"></span><span class="k">TAB</span></button></div>
   <div id="banner"><div class="t" id="banner-t"></div><div class="s" id="banner-s"></div></div>
 
   <div id="hud" hidden>
@@ -147,7 +200,14 @@ ru:{
   kSpace:'ПРОБЕЛ', kMouse:'МЫШЬ', kArrows:'СТРЕЛКИ', hint:'Стрелки: выбор    Enter: ок    Esc: назад',
   fatalLib:'Не удалось загрузить 3D-движок. Проверь подключение и обнови страницу.',
   fatalGL:'Браузер не дал включить WebGL, а без него 3D не работает. Попробуй другой браузер или включи аппаратное ускорение.',
-  touch:'Игре нужна клавиатура: открой её на компьютере.',
+  touch:'Левый палец: ходьба. Правый: обзор. Кнопка ОГОНЬ: стрельба.', pressTouch:'КОСНИСЬ ЭКРАНА', hintT:'Касание: выбор    < >: значение', tFire:'ОГОНЬ',
+  oVol:'Громкость', dVol:'В игре: клавиши − и +, M выключает звук', volMsg:v=>'Громкость: '+v,
+  oSens:'Чувствит.', dSens:'Скорость поворота мышью и пальцем',
+  oMap:'Карта', vMapOn:'Открыта', vMapOff:'Свёрнута', dMap:'Мини-карта в правом верхнем углу. TAB или касание сворачивает её', mapLbl:'КАРТА', mapShow:'КАРТА +', mapHide:'КАРТА −',
+  oLight:'Освещение', vDay:'Дневной свет', vNight:'Темнота', dDay:'Уровни светлые, видно далеко', dNight:'Как задумано: тьма, фонарь и лампы',
+  tStick:'ЛЕВЫЙ ПАЛЕЦ', tLook:'ПРАВЫЙ ПАЛЕЦ', tFireK:'ОГОНЬ', tWeapK:'⇄', tMenuK:'МЕНЮ', tFireD:'стрельба, можно вести пальцем', tStickD:'ходьба и стрейф', tLookD:'поворот', tWeapD:'смена оружия', tMenuD:'пауза, громкость, свет',
+  cVol:'громкость', cMap:'карта',
+  iosFs:'На iPhone для полного экрана: Поделиться → «На экран Домой».',
   noLock:'Захват мыши недоступен: поворачивай стрелками или включи поворот клавишами',
   pal0:'Токсичный склад', pal1:'Красная тревога', pal2:'Морг', pal3:'Литейный цех', pal4:'Чумной улей',
   pick_med:a=>'Аптечка: +'+a+' здоровья', pick_stim:a=>'Стимпак: +'+a+' здоровья', pick_armor:a=>'Бронежилет: +'+a+' брони',
@@ -188,7 +248,14 @@ en:{
   kSpace:'SPACE', kMouse:'MOUSE', kArrows:'ARROWS', hint:'Arrows: select    Enter: ok    Esc: back',
   fatalLib:'The 3D engine failed to load. Check your connection and reload the page.',
   fatalGL:'Your browser refused to start WebGL, and the game needs it. Try another browser or turn on hardware acceleration.',
-  touch:'This game needs a keyboard. Open it on a computer.',
+  touch:'Left thumb: move. Right thumb: look. FIRE button: shoot.', pressTouch:'TAP THE SCREEN', hintT:'Tap: select    < >: change', tFire:'FIRE',
+  oVol:'Volume', dVol:'In game: − and + keys, M mutes', volMsg:v=>'Volume: '+v,
+  oSens:'Sensitivity', dSens:'Turn speed for mouse and touch',
+  oMap:'Map', vMapOn:'Open', vMapOff:'Folded', dMap:'Minimap in the top right corner. TAB or a tap folds it', mapLbl:'MAP', mapShow:'MAP +', mapHide:'MAP −',
+  oLight:'Lighting', vDay:'Daylight', vNight:'Darkness', dDay:'Bright levels, you can see far', dNight:'As intended: darkness, lantern and lamps',
+  tStick:'LEFT THUMB', tLook:'RIGHT THUMB', tFireK:'FIRE', tWeapK:'⇄', tMenuK:'MENU', tFireD:'shoot, drag to aim', tStickD:'move and strafe', tLookD:'turn', tWeapD:'switch weapon', tMenuD:'pause, volume, light',
+  cVol:'volume', cMap:'map',
+  iosFs:'On iPhone, for full screen: Share → "Add to Home Screen".',
   noLock:'Mouse capture is unavailable: turn with the arrow keys or switch turning to keys',
   pal0:'Toxic Warehouse', pal1:'Red Alert', pal2:'Morgue', pal3:'Foundry', pal4:'Plague Hive',
   pick_med:a=>'Medkit: +'+a+' health', pick_stim:a=>'Stimpack: +'+a+' health', pick_armor:a=>'Armor vest: +'+a+' armor',
@@ -211,8 +278,57 @@ en:{
   lvlDone:l=>'LEVEL '+l+' CLEARED', stKills:'Kills', stTime:'Time', stScore:'Score', stLevel:'Level',
   upNext:(l,t,b)=>'Next: level '+l+', '+t+' zombies'+(b?', '+b+(b>1?' bosses':' boss'):''),
   taken:n=>'Taken: '+n, upgradeMsg:t=>'Upgrade: '+t, best:l=>'BEST: LEVEL '+l, skillMsg:n=>'Skill: '+n,
+},
+tr:{
+  title:'Ölü Sektör', menuBtn:'MENÜ', hAmmo:'CEPHANE', hHp:'SAĞLIK', hArmor:'ZIRH',
+  pressKey:'BİR TUŞA BAS', mNew:'Yeni oyun', mSettings:'Ayarlar', mControls:'Kontroller', mBack:'Geri',
+  mResume:'Devam et', mRestart:'Bölümü yeniden başlat', mQuit:'Menüye dön', mRetry:'Tekrar dene',
+  hSkill:'ZORLUK SEÇ', hPause:'DURAKLATILDI', hDead:'SENİ YEDİLER', pickUp:'BİR GELİŞTİRME SEÇ',
+  nightmareQ:'Emin misin? Bu zorluk adil olma numarası bile yapmıyor.', quitQ:'Menüye dönülsün mü? Bu bölümdeki ilerleme kaybolacak.', yes:'Evet', no:'Hayır',
+  sk0:'Anne, korkuyorum', sk1:'Dayanırım', sk2:'Kıyma makinesi', sk3:'Kâbus!',
+  skd0:'Zayıf zombiler, bol cephane. Puan x0,5', skd1:'Tasarlandığı gibi. Puan x1', skd2:'Daha dayanıklı ve öfkeli zombiler, daha az cephane. Puan x1,5', skd3:'Çift hasar, ölü sürüleri, kıt cephane. Puan x2,5',
+  skNote:'Oyun sırasında hasar ve hız hemen değişir, gerisi yeni zombilere uygulanır.', skillName:'Zorluk',
+  oLang:'Dil', oSkill:'Zorluk', oCtrl:'Dönüş', oPx:'Grafik', oCrt:'Ekran', oSnd:'Ses',
+  vMouse:'Fare', vKeys:'Tuşlar', dMouse:'A ve D yana kayar, fare veya oklarla dön', dKeys:'A ve D döner, Q ve E yana kayar, eski Doom gibi',
+  v1993:'1993', vSharp:'Net', dPx:'İri pikseller, düşük çözünürlük', dSharp:'Tam ekran çözünürlüğü',
+  vCrt:'CRT', vClean:'Temiz', dCrt:'Eski monitörün tarama çizgileri', dClean:'Görüntünün üstünde efekt yok', on:'Açık', off:'Kapalı',
+  cMove:'yürü', cStrafe:'yana kay', cTurn:'dön', cFire:'ateş', cWeap:'tabanca, alev silahı, plazma', cWalk:'yavaş yürü', cMenu:'menü', cMisc:'ses, tam ekran',
+  kSpace:'BOŞLUK', kMouse:'FARE', kArrows:'OKLAR', hint:'Oklar: seç    Enter: tamam    Esc: geri',
+  fatalLib:'3D motoru yüklenemedi. Bağlantını kontrol edip sayfayı yenile.',
+  fatalGL:'Tarayıcı WebGL\'i başlatmadı ve oyunun buna ihtiyacı var. Başka bir tarayıcı dene veya donanım hızlandırmayı aç.',
+  touch:'Sol başparmak: yürü. Sağ başparmak: bak. ATEŞ düğmesi: vur.', pressTouch:'EKRANA DOKUN', hintT:'Dokun: seç    < >: değiştir', tFire:'ATEŞ',
+  oVol:'Ses düzeyi', dVol:'Oyunda: − ve + tuşları, M sesi kapatır', volMsg:v=>'Ses düzeyi: '+v,
+  oSens:'Hassasiyet', dSens:'Fare ve dokunmayla dönüş hızı',
+  oMap:'Harita', vMapOn:'Açık', vMapOff:'Kapalı', dMap:'Sağ üst köşedeki mini harita. TAB veya dokunuş onu katlar', mapLbl:'HARİTA', mapShow:'HARİTA +', mapHide:'HARİTA −',
+  oLight:'Aydınlatma', vDay:'Gün ışığı', vNight:'Karanlık', dDay:'Bölümler aydınlık, uzağı görürsün', dNight:'Tasarlandığı gibi: karanlık, fener ve lambalar',
+  tStick:'SOL BAŞPARMAK', tLook:'SAĞ BAŞPARMAK', tFireK:'ATEŞ', tWeapK:'⇄', tMenuK:'MENÜ', tFireD:'ateş et, nişan için kaydır', tStickD:'yürü ve yana kay', tLookD:'dön', tWeapD:'silah değiştir', tMenuD:'duraklat, ses, ışık',
+  cVol:'ses düzeyi', cMap:'harita',
+  iosFs:'iPhone\'da tam ekran için: Paylaş → "Ana Ekrana Ekle".',
+  noLock:'Fare yakalanamıyor: oklarla dön veya dönüşü tuşlara al',
+  pal0:'Zehirli Depo', pal1:'Kırmızı Alarm', pal2:'Morg', pal3:'Döküm Atölyesi', pal4:'Veba Kovanı',
+  pick_med:a=>'İlk yardım çantası: +'+a+' sağlık', pick_stim:a=>'Stimpak: +'+a+' sağlık', pick_armor:a=>'Çelik yelek: +'+a+' zırh',
+  pick_fuel:a=>'Napalm bidonu: +'+a+' yakıt', pick_cells:a=>'Plazma bataryası: +'+a+' şarj',
+  wn0:'MAGNUM-X', wn1:'CEHENNEM', wn2:'PM-9 FIRTINA', mk:'MK',
+  noFuel:'Alev silahı için yakıt yok', noCells:'Plazma silahı için şarj yok',
+  outFuel:'Yakıt bitti, tabancaya geçiliyor', outCells:'Plazma bitti, tabancaya geçiliyor',
+  bossNames:['KASAP','YUTUCU','ÇÜRÜYEN TİTAN','VEBA KRALI','ET DEVİ','SEKTÖR EFENDİSİ'],
+  bossOfLevel:l=>'BÖLÜM '+l+' BOSSU', bossDown:n=>n+' DÜŞTÜ', pts:n=>'+'+n+' PUAN', bossBar:(n,l)=>n+'  BL '+l,
+  levelN:l=>'BÖLÜM '+l, bossesN:n=>'  BOSS: '+n, noBosses:'  BOSS YOK',
+  killAll:'Çıkışı açmak için tüm zombileri öldür', cleared:'SEKTÖR TEMİZLENDİ', exitSub:'ÇIKIŞ AÇIK. YEŞİL PORTALI BUL', exitOpen:'Çıkış açık',
+  hudLvl:'BL ', hudKills:(k,t)=>'ÖLDÜ <b>'+k+'</b>/'+t, hudRes:(f,c)=>'YKT <b>'+f+'</b> PLZ <b>'+c+'</b>',
+  up_pDmg:['Patlayıcı mermi','Tabanca hasarı +%35'], up_pRate:['Hafif sürgü','Tabanca atış hızı +%25'],
+  up_dual:['İkinci tabanca','Her elde bir Magnum, atış hızı neredeyse iki katı'], up_pierce:['Zırh delici mermi','Her mermi bir zombiyi daha deler'],
+  up_fDmg:['Napalm','Alev ve yanma hasarı +%35, zombiler daha uzun yanar'], up_fRange:['Meme','Alev menzili ve genişliği +%30'],
+  up_fTank:['İkinci tank','Azami yakıt +100 ve tam dolum'], up_plDmg:['Kızgın plazma','Plazma silahı hasarı +%35'],
+  up_plSplash:['Zincirleme deşarj','Plazma patlama yarıçapı +%60'], up_plRate:['Parçacık hızlandırıcı','Plazma silahı atış hızı +%25'],
+  up_hp:['Savaş uyarıcısı','Azami sağlık +25 ve tam iyileşme'], up_armor:['Kompozit zırh','Hemen +100 zırh'],
+  wtag:{'0':'Tabanca','1':'Alev','2':'Plazma','-1':'Savaşçı'},
+  lvlDone:l=>'BÖLÜM '+l+' TEMİZLENDİ', stKills:'Öldürülen', stTime:'Süre', stScore:'Puan', stLevel:'Bölüm',
+  upNext:(l,t,b)=>'Sıradaki: bölüm '+l+', zombi: '+t+(b?', boss: '+b:''),
+  taken:n=>'Alındı: '+n, upgradeMsg:t=>'Geliştirme: '+t, best:l=>'REKOR: BÖLÜM '+l, skillMsg:n=>'Zorluk: '+n,
 }};
-let LANG=_ls('ds-lang')||((navigator.language||'').toLowerCase().startsWith('ru')?'ru':'en');
+const LANGS=['ru','en','tr'], LANG_NAMES={ru:'РУССКИЙ',en:'ENGLISH',tr:'TÜRKÇE'};
+let LANG=_ls('ds-lang')||(()=>{ const n=(navigator.language||'').toLowerCase().slice(0,2); return LANGS.includes(n)?n:'en'; })();
 if(!I18N[LANG]) LANG='en';
 function tr(k,...a){ const v=k in I18N[LANG]?I18N[LANG][k]:I18N.ru[k]; return typeof v==='function'?v(...a):(v===undefined?k:v); }
 function applyStatic(){
@@ -507,7 +623,25 @@ function applyPalette(L){
   ambient.color.setHex(P.amb); hemi.color.setHex(P.amb);
   lamps.forEach((lp,i)=>{ const c=P.lamps[i%P.lamps.length]; lp.l.color.setHex(c); lp.pm.color.setHex(c); });
   wAmb.color.setHex(P.amb).lerp(new T.Color(0xffffff),0.5);
+  palL=L; applyDaylight(P);
   return P;
+}
+// daylight option: a pale haze instead of the black fog, flat bright fill; the palette still tints it a little
+let palL=1;
+function applyDaylight(P){
+  P=P||PAL[(palL-1)%PAL.length];
+  if(S.day){
+    const haze=new T.Color(0xb8b4a8).lerp(new T.Color(P.lamps[0]),0.12);
+    scene.fog.color.copy(haze); scene.background.copy(haze); scene.fog.near=30; scene.fog.far=170;
+    ambient.color.setHex(0xfff4e6).lerp(new T.Color(P.amb),0.15); ambient.intensity=1.15;
+    hemi.color.setHex(0xe8f0ff); hemi.groundColor.setHex(0x6a5a48); hemi.intensity=0.7;
+    lantern.intensity=0.3; wAmb.intensity=1.05;
+  } else {
+    scene.fog.color.setHex(P.fog); scene.background.setHex(P.fog); scene.fog.near=6; scene.fog.far=72;
+    ambient.color.setHex(P.amb); ambient.intensity=0.6;
+    hemi.color.setHex(P.amb); hemi.groundColor.setHex(0x100b09); hemi.intensity=0.35;
+    lantern.intensity=0.85; wAmb.intensity=0.65;
+  }
 }
 
 // ---------- particles ----------
@@ -607,7 +741,7 @@ const AU={ ctx:null, master:null, noise:null, flameGain:null,
     try{
       const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
       const c=this.ctx=new C();
-      this.master=c.createGain(); this.master.gain.value=S.sound?0.6:0;
+      this.master=c.createGain(); this.master.gain.value=this.level();
       const comp=c.createDynamicsCompressor(); this.master.connect(comp); comp.connect(c.destination);
       const len=c.sampleRate, buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
       for(let i=0;i<len;i++) d[i]=Math.random()*2-1; this.noise=buf;
@@ -621,7 +755,8 @@ const AU={ ctx:null, master:null, noise:null, flameGain:null,
       const lfo=c.createOscillator(); lfo.frequency.value=0.06; const lg=c.createGain(); lg.gain.value=80; lfo.connect(lg); lg.connect(dl.frequency); lfo.start();
     }catch(e){ this.ctx=null; }
   },
-  setOn(v){ if(this.master) this.master.gain.value=v?0.6:0; },
+  level(){ return S.sound?S.vol/100*0.85:0; },
+  setOn(){ if(this.master) this.master.gain.setTargetAtTime(this.level(),this.ctx.currentTime,0.02); },
   vol(x,z){ return x===undefined?1:Math.max(0,1-Math.hypot(x-player.x,z-player.z)/60); },
   nz(dur,f,q,v,type,f2,delay=0){
     const c=this.ctx; if(!c||v<=0.005) return; const t=c.currentTime+delay;
@@ -1020,6 +1155,8 @@ function moveP(){
   }
 }
 const keys={}; let mouseDown=false;
+// touch state: analog stick vector (-1..1) and the fire plate
+const tc={mx:0,my:0,fire:false,stick:null,look:null,fireId:null,sx:0,sy:0,lx:0,fx:0};
 function playerTic(){
   const p=player; p.px=p.x; p.pz=p.z; p.tic++;
   if(p.dead){ p.momx*=FRICTION; p.momz*=FRICTION; moveP(); return; }
@@ -1030,6 +1167,7 @@ function playerTic(){
   if(S.ctrl==='classic'){ if(keys.KeyA) turn+=1; if(keys.KeyD) turn-=1; if(keys.KeyQ) side-=1; if(keys.KeyE) side+=1; }
   else { if(keys.KeyA) side-=1; if(keys.KeyD) side+=1; }
   if(keys.ArrowLeft) turn+=1; if(keys.ArrowRight) turn-=1;
+  fwd=clamp(fwd-tc.my,-1,1); side=clamp(side+tc.mx,-1,1);
   if(turn){ p.turnHeld++; const at=p.turnHeld<6?320:(run?1280:640); p.yaw+=turn*at/65536*TAU; } else p.turnHeld=0;
   // Doom: forwardmove 25/50, sidemove 24/40, thrust = move*2048 (fixed point), no normalisation (strafe-running is faster)
   const fm=fwd*(run?50:25), sm=side*(run?40:24), th=2048/65536*K;
@@ -1144,7 +1282,7 @@ function weaponUpdate(dt){
     if(p.switchT<=0) p.switchT=0;
     AU.flame(false); return;
   }
-  const firing=(keys.Space||mouseDown)&&!p.dead&&S.mode==='play';
+  const firing=(keys.Space||mouseDown||tc.fire)&&!p.dead&&S.mode==='play';
   if(p.weapon===1){ AU.flame(firing&&p.fuel>0); WEAP[1].pilot.scale.setScalar((firing?0.2:0.12)*(0.8+Math.random()*0.4)); }
   if(!firing||p.cool>0) return;
   if(p.weapon===0) firePistol(); else if(p.weapon===1) fireFlame(); else firePlasma();
@@ -1465,7 +1603,7 @@ function startLevel(fresh){
     for(let i=0;i<S.bossCount;i++){ const s=spots[i%spots.length]; spawnZombie('boss',s[0]+sp(),s[1]+sp(),{idx:i}); }
   }
   setPortal(false);
-  showBanner(tr('levelN',L), tr('pal'+((L-1)%PAL.length)).toUpperCase()+(S.bossCount?tr('bossesN',S.bossCount):tr('noBosses')));
+  showBanner(tr('levelN',L), tr('pal'+((L-1)%PAL.length)).toLocaleUpperCase(LANG)+(S.bossCount?tr('bossesN',S.bossCount):tr('noBosses')));
   msg(tr('killAll'),'#f2a531');
   hudCache={};
 }
@@ -1557,6 +1695,7 @@ function hud(dt){
   for(let i=0;i<3;i++){ const el=$('s'+i), have=i===0||(i===1?p.fuel>0:p.cells>0), cls=(have?'have ':'')+(p.weapon===i?'cur':''); if(el.className!==cls) el.className=cls; }
   setText('h-wname',tr('wn'+p.weapon)+' · '+tr('mk')+' '+MK[Math.min(MK.length-1,weaponMk(p.weapon))]);
   setText('h-level',tr('hudLvl')+S.level);
+  if(S.touch) setText('t-wn',String(p.weapon+1));
   setHTML('h-kills',tr('hudKills',S.kills,S.total));
   setHTML('h-res',tr('hudRes',p.fuel,p.cells));
   drawFace();
@@ -1631,7 +1770,7 @@ function mkText(u){
 const logoCv=document.createElement('canvas'); logoCv.id='logo';
 function drawLogo(){
   // Tiny5 sits on an exact pixel grid at 8px; draw there, then blow each font pixel up to UxU
-  const text=tr('title').toUpperCase(), fs=8, U=3, font=`${fs}px Tiny5, 'Courier New', monospace`;
+  const text=tr('title').toLocaleUpperCase(LANG), fs=8, U=3, font=`${fs}px Tiny5, 'Courier New', monospace`;
   const mc=document.createElement('canvas'); let mg=mc.getContext('2d'); mg.font=font;
   const sw=Math.ceil(mg.measureText(text).width)+4, sh=fs+6;
   mc.width=sw; mc.height=sh; mg=mc.getContext('2d'); mg.font=font; mg.fillStyle='#fff'; mg.textBaseline='top'; mg.fillText(text,2,3);
@@ -1723,14 +1862,18 @@ const bestText=()=>{ const b=+(lsGet('ds-best')||0); return b>1?tr('best',b):'';
 const fmtTime=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const statRow=(l,v)=>`<div class="stat"><span>${l}</span><span class="dots"></span><b>${v}</b></div>`;
 function controlsHTML(){
+  if(S.touch){
+    const rows=[[tr('tStick'),tr('tStickD')],[tr('tLook'),tr('tLookD')],[tr('tFireK'),tr('tFireD')],[tr('tWeapK'),tr('tWeapD')],[tr('mapLbl'),tr('dMap')],[tr('tMenuK'),tr('tMenuD')]];
+    return '<div class="ctl">'+rows.map(([k,v])=>`<span class="k">${k}</span><span>${v}</span>`).join('')+'</div>';
+  }
   const m=S.ctrl==='mouse', rows=[['W S',tr('cMove')],['A D',tr(m?'cStrafe':'cTurn')]];
   if(!m) rows.push(['Q E',tr('cStrafe')]);
-  rows.push([m?tr('kMouse')+' / '+tr('kArrows'):tr('kArrows'),tr('cTurn')],[tr('kSpace'),tr('cFire')],['1 2 3',tr('cWeap')],['SHIFT',tr('cWalk')],['ESC',tr('cMenu')],['M  F',tr('cMisc')]);
+  rows.push([m?tr('kMouse')+' / '+tr('kArrows'):tr('kArrows'),tr('cTurn')],[tr('kSpace'),tr('cFire')],['1 2 3',tr('cWeap')],['SHIFT',tr('cWalk')],['ESC',tr('cMenu')],['− +',tr('cVol')],['TAB',tr('cMap')],['M  F',tr('cMisc')]);
   return '<div class="ctl">'+rows.map(([k,v])=>`<span class="k">${k}</span><span>${v}</span>`).join('')+'</div>';
 }
 const SCREENS={
   title:()=>({logo:true, any:()=>{ AU.init(); AU.menuSel(); openMenu('main'); },
-    extra:`<div class="press blink">${tr('pressKey')}</div>`, foot:[bestText(),S.touch?tr('touch'):''].filter(Boolean).join('<br>'), items:[]}),
+    extra:`<div class="press blink">${tr(S.touch?'pressTouch':'pressKey')}</div>`, foot:[bestText(),S.touch?tr('touch'):''].filter(Boolean).join('<br>'), items:[]}),
   main:()=>({logo:true, back:()=>openMenu('title'), foot:bestText(), items:[
     {label:tr('mNew'), act:()=>openMenu('skill',true)},
     {label:tr('mSettings'), act:()=>openMenu('settings',true)},
@@ -1739,22 +1882,25 @@ const SCREENS={
     act:()=>{ if(i===3) openMenu('nightmare',true); else beginGame(i); }}))}),
   nightmare:()=>({head:tr('sk3'), text:tr('nightmareQ'), sel:1, back:backMenu, items:[
     {label:tr('yes'), act:()=>beginGame(3)}, {label:tr('no'), act:backMenu}]}),
-  settings:()=>({head:tr('mSettings').toUpperCase(), cls:'sm', back:backMenu, items:[
-    {label:tr('oLang'), val:LANG==='ru'?'РУССКИЙ':'ENGLISH', change:()=>setLang(LANG==='ru'?'en':'ru')},
+  settings:()=>({head:tr('mSettings').toLocaleUpperCase(LANG), cls:'sm', back:backMenu, items:[
+    {label:tr('oLang'), val:LANG_NAMES[LANG], change:d=>setLang(LANGS[(LANGS.indexOf(LANG)+d+LANGS.length)%LANGS.length])},
     {label:tr('oSkill'), val:tr('sk'+S.skill), desc:tr('skd'+S.skill)+(S.mode!=='menu'?'. '+tr('skNote'):''), change:d=>setSkill((S.skill+d+4)%4)},
-    {label:tr('oCtrl'), val:tr(S.ctrl==='mouse'?'vMouse':'vKeys'), desc:tr(S.ctrl==='mouse'?'dMouse':'dKeys'), change:toggleCtrl},
+    ...(S.touch?[]:[{label:tr('oCtrl'), val:tr(S.ctrl==='mouse'?'vMouse':'vKeys'), desc:tr(S.ctrl==='mouse'?'dMouse':'dKeys'), change:toggleCtrl}]),
+    {label:tr('oLight'), val:tr(S.day?'vDay':'vNight'), desc:tr(S.day?'dDay':'dNight'), change:toggleDay},
     {label:tr('oPx'), val:tr(S.pixel?'v1993':'vSharp'), desc:tr(S.pixel?'dPx':'dSharp'), change:togglePx},
     {label:tr('oCrt'), val:tr(S.crt?'vCrt':'vClean'), desc:tr(S.crt?'dCrt':'dClean'), change:toggleCrt},
-    {label:tr('oSnd'), val:tr(S.sound?'on':'off'), change:toggleSnd},
+    {label:tr('oVol'), val:S.sound&&S.vol?S.vol+'%':tr('off'), desc:tr('dVol'), change:d=>{ let v=(S.sound?S.vol:0)+d*10; if(v>100) v=0; if(v<0) v=100; setVol(v); }},
+    {label:tr('oSens'), val:'x'+S.sens.toFixed(2).replace(/0$/,''), desc:tr('dSens'), change:d=>{ let v=Math.round((S.sens+d*0.25)*4)/4; if(v>3) v=0.25; if(v<0.25) v=3; setSens(v); }},
+    {label:tr('oMap'), val:tr(S.map?'vMapOn':'vMapOff'), desc:tr('dMap'), change:toggleMap},
     {label:tr('mBack'), act:backMenu}]}),
-  controls:()=>({head:tr('mControls').toUpperCase(), html:controlsHTML(), back:backMenu, items:[{label:tr('mBack'), act:backMenu}]}),
+  controls:()=>({head:tr('mControls').toLocaleUpperCase(LANG), html:controlsHTML(), foot:S.touch&&IOS&&!fsSupported()&&!STANDALONE?tr('iosFs'):'', back:backMenu, items:[{label:tr('mBack'), act:backMenu}]}),
   pause:()=>({head:tr('hPause'), back:resume, items:[
     {label:tr('mResume'), act:resume},
     {label:tr('mRestart'), act:retry},
     {label:tr('mSettings'), act:()=>openMenu('settings',true)},
     {label:tr('mControls'), act:()=>openMenu('controls',true)},
     {label:tr('mQuit'), act:()=>openMenu('quit',true)}]}),
-  quit:()=>({head:tr('mQuit').toUpperCase(), text:tr('quitQ'), back:backMenu, items:[
+  quit:()=>({head:tr('mQuit').toLocaleUpperCase(LANG), text:tr('quitQ'), back:backMenu, items:[
     {label:tr('no'), act:backMenu}, {label:tr('yes'), act:toMenu}]}),
   inter:()=>{ const nd=diff(S.level+1); return {head:tr('lvlDone',S.level), html:'<div class="stats" id="istats"></div>', sub:tr('pickUp'), cls:'sm',
     foot:tr('upNext',S.level+1,nd.total,nd.bosses), onOpen:renderCount,
@@ -1773,6 +1919,7 @@ function buildMenu(name,sel){
   menu={name,spec,sel:sel??spec.sel??0};
   let h='';
   if(spec.logo) h+='<canvas id="logo-slot"></canvas>';
+  if(S.touch&&spec.back&&name!=='main'&&!spec.items.some(it=>it.act===spec.back)) h+=`<button type="button" class="menu-btn ui-back" id="ui-back">‹ ${tr('mBack')}</button>`;
   if(spec.head) h+=`<div class="uihead">${spec.head}</div>`;
   if(spec.text) h+=`<div class="utext">${spec.text}</div>`;
   if(spec.html) h+=spec.html;
@@ -1781,7 +1928,7 @@ function buildMenu(name,sel){
   if(spec.items.length){
     h+=`<div class="items ${spec.cls||''}">`+spec.items.map((it,i)=>`<button type="button" tabindex="-1" class="item" data-i="${i}"><span>${it.label}</span>${it.val!==undefined?`<span class="val">${it.val}</span>`:''}</button>`).join('')+'</div>';
     if(spec.items.some(it=>it.desc)) h+='<div class="desc" id="udesc"></div>';
-    h+=`<div class="uhint">${tr('hint')}</div>`;
+    h+=`<div class="uhint">${tr(S.touch?'hintT':'hint')}</div>`;
   }
   if(spec.foot) h+=`<div class="ufoot">${spec.foot}</div>`;
   ui.innerHTML=h; ui.hidden=false; ui.classList.toggle('over-hud',!$('hud').hidden);
@@ -1790,8 +1937,16 @@ function buildMenu(name,sel){
     const i=+b.dataset.i;
     b.addEventListener('mousedown',e=>e.preventDefault());
     b.addEventListener('mouseenter',()=>setSel(i));
-    b.addEventListener('click',e=>{ e.stopPropagation(); menu.sel=i; activate(1); });
+    b.addEventListener('click',e=>{
+      e.stopPropagation(); menu.sel=i;
+      // tapping the left half of a "< value >" steps back, anywhere else steps forward
+      const v=b.querySelector('.val'); let d=1;
+      if(v&&menu.spec.items[i].change){ const r=v.getBoundingClientRect(); if(e.clientX<r.left+r.width/2) d=-1; }
+      activate(d);
+    });
   });
+  const ub=ui.querySelector('#ui-back');
+  if(ub) ub.addEventListener('click',e=>{ e.stopPropagation(); if(menu&&menu.spec.back){ AU.menuBack(); menu.spec.back(); } });
   setSel(menu.sel,true);
   if(spec.onOpen) spec.onOpen();
 }
@@ -1832,14 +1987,14 @@ function uiTick(dt){
 }
 
 // ---------- modes ----------
-function showHUD(on){ $('hud').hidden=!on; $('minimap').hidden=!on; }
-function setPlayUI(on){ $('crosshair').hidden=!on; $('btn-menu').hidden=!on; if(!on) $('bossbar').hidden=true; }
-function lock(){ if(S.ctrl!=='mouse') return; try{ const r=canvas.requestPointerLock(); if(r&&r.catch) r.catch(()=>{}); }catch(e){} }
+function showHUD(on){ $('hud').hidden=!on; $('mapbox').hidden=!on; if(on) hudSize(); }
+function setPlayUI(on){ $('crosshair').hidden=!on; $('btn-menu').hidden=!on; $('btn-fs').hidden=!(on&&S.touch&&fsSupported()); $('touch').hidden=!(on&&S.touch); if(!on){ $('bossbar').hidden=true; tReset(); } }
+function lock(){ if(S.ctrl!=='mouse'||S.touch) return; try{ const r=canvas.requestPointerLock(); if(r&&r.catch) r.catch(()=>{}); }catch(e){} }
 function unlock(){ try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){} }
 function toPlay(){ S.mode='play'; closeMenu(); showHUD(true); setPlayUI(true); keys.Space=keys.Enter=false; mouseDown=false; lock(); last=performance.now(); }
 function saveBest(){ const b=+(lsGet('ds-best')||0); if(S.level>b) lsSet('ds-best',String(S.level)); }
 function beginGame(skill){
-  AU.init(); setSkill(skill); startMelt();
+  AU.init(); if(S.touch&&!isFs()&&fsSupported()) toggleFs(); setSkill(skill); startMelt();
   const p=player; p.hp=100; p.maxHp=100; p.armor=0; p.fuel=150; p.cells=120; p.up=UPG_ZERO();
   S.level=1; S.score=0; startLevel(true); toPlay();
 }
@@ -1861,18 +2016,41 @@ function retry(){ AU.init(); startMelt(); loadPlayer(S.snapshot); refreshWeapons
 function toMenu(){ startMelt(); S.mode='menu'; unlock(); AU.flame(false); clearLevel(); S.level=1; S.diff=diff(1); startMenuScene(); showHUD(false); setPlayUI(false); menuStack.length=0; openMenu('main'); }
 
 // ---------- options ----------
-function applyLang(){ applyStatic(); drawLogo(); hudCache={}; rebuild(); if(S.mode!=='menu') hud(0); }
+function applyLang(){ applyStatic(); setMap(S.map); drawLogo(); hudCache={}; rebuild(); if(S.mode!=='menu') hud(0); }
 function setSkill(v){ if(v===S.skill) return; S.skill=v; lsSet('ds-skill',String(v)); if(S.mode==='paused') msg(tr('skillMsg',tr('sk'+v)),'#f2a531'); }
 function setLang(v){ if(v===LANG||!I18N[v]) return; LANG=v; lsSet('ds-lang',v); applyLang(); }
 function toggleCtrl(){ S.ctrl=S.ctrl==='mouse'?'classic':'mouse'; lsSet('ds-ctrl',S.ctrl); }
 function togglePx(){ S.pixel=!S.pixel; lsSet('ds-px',S.pixel?'1':'0'); resize(); }
 function toggleCrt(){ S.crt=!S.crt; lsSet('ds-crt',S.crt?'1':'0'); $('crt').hidden=!S.crt; }
-function toggleSnd(){ S.sound=!S.sound; lsSet('ds-snd',S.sound?'1':'0'); AU.setOn(S.sound); }
+function toggleSnd(){ S.sound=!S.sound; if(S.sound&&!S.vol) S.vol=70; lsSet('ds-snd',S.sound?'1':'0'); lsSet('ds-vol',String(S.vol)); AU.setOn(); }
+function setVol(v){ S.vol=clamp(Math.round(v),0,100); S.sound=S.vol>0; lsSet('ds-vol',String(S.vol)); lsSet('ds-snd',S.sound?'1':'0'); AU.setOn(); }
+function setSens(v){ S.sens=v; lsSet('ds-sens',String(v)); }
+function toggleDay(){ S.day=!S.day; lsSet('ds-day',S.day?'1':'0'); applyDaylight(); }
+function setMap(on){ S.map=on; lsSet('ds-map',on?'1':'0'); $('mapbox').classList.toggle('closed',!on); $('map-lbl').textContent=tr(on?'mapHide':'mapShow'); }
+function toggleMap(){ setMap(!S.map); }
+function fsSupported(){ const el=$('game'); return !!(el.requestFullscreen||el.webkitRequestFullscreen); }
+function isFs(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+function toggleFs(){
+  try{
+    if(isFs()){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); return; }
+    const el=$('game'), f=el.requestFullscreen||el.webkitRequestFullscreen; const r=f.call(el,{navigationUI:'hide'}); if(r&&r.catch) r.catch(()=>{});
+  }catch(err){}
+}
 S.ctrl=lsGet('ds-ctrl')==='classic'?'classic':'mouse';
 S.pixel=lsGet('ds-px')!=='0';
 S.sound=lsGet('ds-snd')!=='0';
+S.vol=lsGet('ds-vol')===null?70:clamp(+lsGet('ds-vol')||0,0,100);
+S.sens=clamp(+lsGet('ds-sens')||1,0.25,3);
+S.day=lsGet('ds-day')==='1';
+S.map=lsGet('ds-map')!=='0';
 S.crt=lsGet('ds-crt')!=='0'; $('crt').hidden=!S.crt;
-S.touch=matchMedia('(pointer: coarse)').matches&&!matchMedia('(pointer: fine)').matches;
+S.touch=matchMedia('(pointer: coarse)').matches&&!matchMedia('(pointer: fine)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(pointer: fine)').matches);
+const IOS=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+$('game').classList.toggle('touch',S.touch);
+// a touch on a hybrid device switches the on-screen controls on
+addEventListener('touchstart',()=>{ if(S.touch) return; S.touch=true; $('game').classList.add('touch'); unlock(); if(S.mode==='play') setPlayUI(true); rebuild(); },{passive:true,capture:true});
+document.addEventListener('gesturestart',e=>e.preventDefault());
 $('btn-menu').addEventListener('mousedown',e=>{ e.preventDefault(); e.stopPropagation(); });
 $('btn-menu').onclick=pause;
 
@@ -1885,10 +2063,12 @@ addEventListener('keydown',e=>{
   else if(!e.repeat){
     if(c==='Digit1') selectWeapon(0); else if(c==='Digit2') selectWeapon(1); else if(c==='Digit3') selectWeapon(2);
     else if(c==='Escape'||c==='KeyP') pause();
+    else if(c==='Minus'||c==='NumpadSubtract'||c==='Equal'||c==='NumpadAdd'){ setVol((S.sound?S.vol:0)+(c==='Minus'||c==='NumpadSubtract'?-10:10)); msg(tr('volMsg',S.sound?S.vol+'%':tr('off')),'#f2a531'); }
   }
+  if(c==='Tab'&&!e.repeat&&S.mode==='play'){ toggleMap(); }
   if(e.repeat) return;
   if(c==='KeyM'&&!(menu&&menu.spec.any)){ toggleSnd(); if(menu&&menu.name==='settings') rebuild(); }
-  if(c==='KeyF'){ try{ if(document.fullscreenElement) document.exitFullscreen(); else { const r=$('game').requestFullscreen(); if(r&&r.catch) r.catch(()=>{}); } }catch(err){} }
+  if(c==='KeyF') toggleFs();
 });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; mouseDown=false; });
@@ -1904,6 +2084,51 @@ addEventListener('wheel',e=>{ if(S.mode!=='play') return; const n=(player.weapon
 document.addEventListener('pointerlockchange',()=>{ const l=document.pointerLockElement===canvas; if(!l&&S.wasLocked&&S.mode==='play') pause(); S.wasLocked=l; });
 document.addEventListener('pointerlockerror',()=>{ if(S.mode==='play') msg(tr('noLock'),'#f2a531'); });
 
+// ---------- touch ----------
+const tz=$('touch'), stickEl=$('t-stick'), knob=$('t-knob'), fireB=$('t-fire'), weapB=$('t-weap'), STICK_R=50;
+function lookBy(dx){ if(S.mode==='play'&&!player.dead) player.yaw-=dx*0.0065*S.sens; }
+function stickOff(){ tc.stick=null; tc.mx=tc.my=0; stickEl.style.left=stickEl.style.top=''; knob.style.transform=''; stickEl.classList.remove('on'); }
+function tReset(){ stickOff(); tc.look=tc.fireId=null; tc.fire=false; fireB.classList.remove('on'); }
+const grab=(el,e)=>{ try{ el.setPointerCapture(e.pointerId); }catch(err){} };
+// left 45% of the screen: a stick that appears under the thumb; the rest: drag to turn
+tz.addEventListener('pointerdown',e=>{
+  if(S.mode!=='play') return;
+  e.preventDefault(); AU.init();
+  if(e.clientX<innerWidth*0.45&&tc.stick===null){
+    tc.stick=e.pointerId; tc.sx=e.clientX; tc.sy=e.clientY;
+    stickEl.style.left=e.clientX+'px'; stickEl.style.top=e.clientY+'px'; stickEl.classList.add('on');
+  } else if(tc.look===null){ tc.look=e.pointerId; tc.lx=e.clientX; }
+  else return;
+  grab(tz,e);
+});
+tz.addEventListener('pointermove',e=>{
+  if(e.pointerId===tc.stick){
+    let dx=e.clientX-tc.sx, dy=e.clientY-tc.sy; const d=Math.hypot(dx,dy);
+    if(d>STICK_R){ dx*=STICK_R/d; dy*=STICK_R/d; }
+    knob.style.transform=`translate(${dx}px,${dy}px)`;
+    const dead=0.15, m=Math.min(1,d/STICK_R), k=m<dead?0:(m-dead)/(1-dead)/(m||1);
+    tc.mx=dx/STICK_R*k; tc.my=dy/STICK_R*k;
+  } else if(e.pointerId===tc.look){ lookBy(e.clientX-tc.lx); tc.lx=e.clientX; }
+});
+const tUp=e=>{ if(e.pointerId===tc.stick) stickOff(); else if(e.pointerId===tc.look) tc.look=null; };
+tz.addEventListener('pointerup',tUp); tz.addEventListener('pointercancel',tUp);
+// fire plate: hold to shoot, slide the thumb to keep aiming
+fireB.addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); if(S.mode!=='play') return; AU.init(); tc.fire=true; tc.fireId=e.pointerId; tc.fx=e.clientX; fireB.classList.add('on'); grab(fireB,e); });
+fireB.addEventListener('pointermove',e=>{ if(e.pointerId===tc.fireId){ lookBy(e.clientX-tc.fx); tc.fx=e.clientX; } });
+const fUp=e=>{ if(e.pointerId===tc.fireId){ tc.fire=false; tc.fireId=null; fireB.classList.remove('on'); } };
+fireB.addEventListener('pointerup',fUp); fireB.addEventListener('pointercancel',fUp);
+// weapon plate: next weapon that has ammo
+weapB.addEventListener('pointerdown',e=>{
+  e.preventDefault(); e.stopPropagation(); if(S.mode!=='play') return;
+  const p=player; weapB.classList.add('on'); setTimeout(()=>weapB.classList.remove('on'),120);
+  for(let k=1;k<=3;k++){ const n=(p.weapon+k)%3; if(n===0||(n===1?p.fuel>0:p.cells>0)){ selectWeapon(n); break; } }
+});
+for(const el of [fireB,weapB]) el.addEventListener('contextmenu',e=>e.preventDefault());
+$('btn-fs').addEventListener('click',e=>{ e.stopPropagation(); toggleFs(); });
+const mapTap=e=>{ e.preventDefault(); e.stopPropagation(); toggleMap(); };
+$('map-tog').addEventListener('mousedown',e=>e.preventDefault()); $('map-tog').addEventListener('click',mapTap);
+$('minimap').addEventListener('click',mapTap);
+
 // ---------- resize ----------
 function resize(){
   const w=Math.max(1,innerWidth), h=Math.max(1,innerHeight), aspect=w/h;
@@ -1917,9 +2142,13 @@ function resize(){
   wcam.aspect=aspect; wcam.fov=aspect<1?68:50; wcam.updateProjectionMatrix();
   pScale=renderH/(2*Math.tan(vfov*Math.PI/360));
   fxA.mat.uniforms.uScale.value=pScale; fxN.mat.uniforms.uScale.value=pScale;
-  sizeLogo();
+  sizeLogo(); hudSize();
 }
+function hudSize(){ const h=$('hud'); if(!h.hidden) document.documentElement.style.setProperty('--hud-h',h.offsetHeight+'px'); }
 addEventListener('resize',resize);
+if(window.visualViewport) visualViewport.addEventListener('resize',resize);
+if(window.ResizeObserver) new ResizeObserver(hudSize).observe($('hud'));
+addEventListener('orientationchange',()=>setTimeout(resize,250));
 
 // ---------- main loop ----------
 let last=performance.now(), acc=0;
